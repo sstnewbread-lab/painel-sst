@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel SST – Indicadores</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0b1020; --card:#131a2c; --card-2:#1a2238; --line:#26304a; --grid:#222b42;
+  --tx:#f1f3f8; --tx2:#b7bfd3; --tx3:#7f89a3;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --good-bg:rgba(12,163,12,.16); --warn-bg:rgba(250,178,25,.16); --crit-bg:rgba(208,59,59,.18); --neu-bg:rgba(127,137,163,.16);
+  --accent:#3987e5; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f3f5f9; --card:#ffffff; --card-2:#f6f7fa; --line:#e3e7ef; --grid:#eceff4;
+  --tx:#0f1626; --tx2:#4a5468; --tx3:#7a8396;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4;
+  --good-bg:rgba(12,163,12,.12); --warn-bg:rgba(250,178,25,.20); --crit-bg:rgba(208,59,59,.12); --neu-bg:rgba(122,131,150,.12);
+  --accent:#2a78d6; --shadow:0 6px 20px rgba(15,22,38,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+.wrap{max-width:1360px;margin:0 auto;padding:22px 26px 40px}
+button,select{font:inherit;color:inherit}
+/* topo */
+.top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--s1),#1c5cab);box-shadow:var(--shadow)}
+.brand h1{font-size:22px;margin:0;letter-spacing:.2px}
+.brand p{margin:2px 0 0;color:var(--tx2);font-size:13px}
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.icon{padding:8px 10px}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx2);padding:6px 12px;border-radius:999px;background:var(--neu-bg)}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--tx3);display:inline-block}
+.live.on i{background:var(--good);box-shadow:0 0 0 0 rgba(12,163,12,.6);animation:pulse 2s infinite}
+.live.on{background:var(--good-bg);color:var(--tx)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(12,163,12,.55)}70%{box-shadow:0 0 0 9px rgba(12,163,12,0)}100%{box-shadow:0 0 0 0 rgba(12,163,12,0)}}
+/* hero */
+.hero{display:grid;grid-template-columns:1.25fr repeat(4,1fr);gap:14px;margin:22px 0 18px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column}
+.tile h3{margin:0;font-size:12.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px}
+.tile .val{font-size:38px;font-weight:700;letter-spacing:-.5px;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.tile .sub{font-size:12.5px;color:var(--tx3)}
+.tile .foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-top:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.crit{background:var(--crit-bg);color:var(--crit)} .pill.neu{background:var(--neu-bg);color:var(--tx2)}
+:root[data-theme="light"] .pill.good{color:#067a06} :root[data-theme="light"] .pill.warn{color:#8a5a00} :root[data-theme="light"] .pill.crit{color:#b02a2a}
+.tile.big{background:linear-gradient(140deg,#14532d 0%,#0f3d24 100%);border-color:#1f6b3d}
+.tile.big.alert{background:linear-gradient(140deg,#5a1a1a 0%,#3d1111 100%);border-color:#7a2a2a}
+:root[data-theme="light"] .tile.big{background:linear-gradient(140deg,#e7f7ea 0%,#d5f0db 100%);border-color:#b9e3c3}
+:root[data-theme="light"] .tile.big.alert{background:linear-gradient(140deg,#fdeaea 0%,#f8d9d9 100%);border-color:#efc1c1}
+.tile.big .val{font-size:64px;line-height:1;margin-top:12px}
+.tile.big .unit{font-size:16px;font-weight:600;color:var(--tx2);margin-left:6px}
+.spark{width:96px;height:34px;flex:none}
+/* abas */
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;width:max-content;max-width:100%;overflow:auto}
+.tab{border:0;background:transparent;padding:9px 18px;border-radius:10px;cursor:pointer;color:var(--tx2);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab.on{background:var(--accent);color:#fff}
+.tab .dot{width:8px;height:8px;border-radius:50%}
+.panel{display:none;margin-top:16px;animation:fade .35s ease}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1.4fr 1fr}
+.g2b{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.card-h h4{margin:0;font-size:15px}
+.card-h .hint{font-size:12px;color:var(--tx3)}
+.seg{display:inline-flex;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--tx2);font-weight:600}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tbtn{border:1px solid var(--line);background:transparent;border-radius:8px;padding:4px 9px;font-size:12px;color:var(--tx2);cursor:pointer}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--tx2);margin:2px 0 6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.legend i.dash{width:16px;height:0;border-top:2px dashed var(--tx2);border-radius:0}
+.chips{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:14px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.chip b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.chip span{font-size:12px;color:var(--tx2)}
+.chart{width:100%;position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{fill:var(--tx3);font-size:11.5px}
+.bar{transition:opacity .15s}
+.bar.dim{opacity:.35}
+@media (prefers-reduced-motion:no-preference){ .grow{transform-box:fill-box;transform-origin:bottom;animation:grow .7s cubic-bezier(.2,.8,.2,1) both} .growx{transform-box:fill-box;transform-origin:left;animation:growx .7s cubic-bezier(.2,.8,.2,1) both} }
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes growx{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.tip{position:fixed;pointer-events:none;background:var(--card-2);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12.5px;box-shadow:var(--shadow);z-index:50;opacity:0;transition:opacity .12s;max-width:260px}
+.tip b{display:block;margin-bottom:3px}
+.tip .r{display:flex;justify-content:space-between;gap:14px;color:var(--tx2)}
+.tip .r em{font-style:normal;color:var(--tx);font-variant-numeric:tabular-nums}
+.tip .k{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.prog{display:grid;gap:26px;margin-top:18px}
+.prow{display:grid;grid-template-columns:190px 1fr 90px 120px;align-items:center;gap:14px}
+.prow .nm{font-weight:600;font-size:14px}
+.track{height:14px;background:var(--card-2);border-radius:999px;position:relative;overflow:visible;border:1px solid var(--line)}
+.fill{height:100%;border-radius:999px}
+.tick{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--tx);opacity:.75;border-radius:2px}
+.prow .pv{font-size:20px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.mini .chip b{font-size:26px}
+.table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.table th,.table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+.table th:first-child,.table td:first-child{text-align:left}
+.table th{color:var(--tx2);font-weight:600}
+.empty{color:var(--tx3);font-size:13px;padding:30px 0;text-align:center}
+.foot{margin-top:22px;color:var(--tx3);font-size:12.5px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.drop{position:fixed;inset:0;background:rgba(57,135,229,.18);border:3px dashed var(--accent);display:none;place-items:center;font-size:22px;font-weight:700;z-index:60}
+.drop.on{display:grid}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:70;font-size:14px}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.help{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:14px;font-size:13px;color:var(--tx2);display:none}
+.help.on{display:block}
+.help ol{margin:6px 0 0 18px;padding:0}
+.pubgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.pubgrid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--tx2)}
+.pubgrid input{background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--tx);font:inherit;font-size:13px}
+.pubrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chk{display:inline-flex;gap:8px;align-items:center;margin-right:auto;color:var(--tx)}
+.pubstat{margin-top:10px;font-size:13px}
+.pubstat a{color:var(--accent);font-weight:600}
+@media (max-width:1150px){.hero{grid-template-columns:repeat(2,1fr)}.tile.big{grid-column:span 2}.g2,.g2b{grid-template-columns:1fr}.chips{grid-template-columns:repeat(4,1fr)}.prow{grid-template-columns:130px 1fr 70px}.prow .pl{display:none}}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.tile.big{grid-column:auto}.chips,.mini{grid-template-columns:repeat(2,1fr)}.wrap{padding:16px}}
+@media print{.ctrls,.tabs .tab:not(.on),.tbtn,.seg{display:none!important}.tile,.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"></path><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>
+      </div>
+      <div>
+        <h1>Painel de Segurança e Saúde do Trabalho</h1>
+        <p id="sub">—</p>
+      </div>
+    </div>
+    <div class="ctrls">
+      <span class="live" id="live"><i></i><span id="liveTxt">Dados do arquivo</span></span>
+      <select class="sel" id="period" aria-label="Período"></select>
+      <button class="btn primary" id="btnConnect" title="Escolha a planilha uma vez; o painel relê o arquivo sozinho a cada 30 segundos">⟳ Conectar planilha</button>
+      <button class="btn" id="btnOpen" title="Abrir um arquivo .xlsx atualizado">📂 Abrir arquivo</button>
+      <button class="btn" id="btnExport" title="Gera um arquivo só de leitura, com os dados atuais, para enviar à diretoria">📤 Gerar versão diretoria</button>
+      <button class="btn" id="btnCloud" title="Publicação online automática (GitHub Pages)">☁ Online</button>
+      <button class="btn icon" id="btnHelp" title="Como atualizar">?</button>
+      <button class="btn icon" id="btnTheme" title="Alternar tema claro/escuro" aria-label="Alternar tema"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"></path></svg></button>
+      <input type="file" id="file" accept=".xlsx" hidden="">
+    </div>
+  </header>
+  <div class="help" id="help">
+    <b>Como manter o painel atualizado</b>
+    <ol>
+      <li><b>Atualização automática</b> (Chrome ou Edge no computador): clique em <b>Conectar planilha</b> e escolha o arquivo <i>Dashboard_KPIs_Seguranca_do_Trabalho.xlsx</i>. Sempre que a planilha for salva, o painel se atualiza sozinho em até 30 segundos. Ao reabrir o painel, clique em <b>Reconectar</b>.</li>
+      <li><b>Manual</b> (qualquer navegador): clique em <b>Abrir arquivo</b> ou arraste a planilha para dentro desta página.</li>
+      <li>O painel lembra os últimos dados carregados neste computador. Nada é enviado para a internet: a leitura é feita no próprio navegador.</li>
+      <li><b>Online:</b> clique em <b>☁ Online</b> para publicar o painel num link fixo que se atualiza sozinho.</li>
+      <li><b>Para a diretoria (arquivo):</b> com os dados atualizados, clique em <b>Gerar versão diretoria</b>. Será baixado um arquivo HTML só de leitura, com os dados daquele momento e sem nenhum acesso à planilha. Envie esse arquivo (e-mail, Teams, pasta compartilhada) sempre que quiser publicar uma nova atualização.</li>
+    </ol>
+  </div>
+
+  <div class="help" id="cloud">
+    <b>☁ Publicação online (GitHub Pages)</b> – a diretoria abre sempre o mesmo link; o painel publica sozinho quando a planilha muda.
+    <div class="pubgrid">
+      <label>Usuário do GitHub<input id="ghUser" placeholder="ex.: lilian-sst" autocomplete="off"></label>
+      <label>Repositório<input id="ghRepo" placeholder="ex.: painel-sst" autocomplete="off"></label>
+      <label>Chave de acesso (token)<input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off"></label>
+    </div>
+    <div class="pubrow">
+      <label class="chk"><input type="checkbox" id="ghAuto"> Publicar automaticamente quando a planilha for atualizada</label>
+      <button class="btn" id="ghSite">1º · Criar/atualizar o site</button>
+      <button class="btn primary" id="ghPub">Publicar dados agora</button>
+    </div>
+    <div class="pubstat" id="ghStat">Preencha os 3 campos. Eles ficam guardados só neste computador.</div>
+  </div>
+
+  <section class="hero" id="hero"></section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-tab="seg"><span class="dot" style="background:var(--s1)"></span>Segurança</button>
+    <button class="tab" data-tab="prev"><span class="dot" style="background:var(--s3)"></span>Prevenção</button>
+    <button class="tab" data-tab="pes"><span class="dot" style="background:var(--s2)"></span>Pessoas</button>
+    <button class="tab" data-tab="epi"><span class="dot" style="background:var(--s5)"></span>EPIs</button>
+    <button class="tab" data-tab="uni"><span class="dot" style="background:var(--s4)"></span>Uniformes</button>
+  </nav>
+
+  <section class="panel on" id="p-seg">
+    <div class="chips" id="segChips"></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4 id="tTaxa">Taxa por mês</h4>
+          <div style="display:flex;gap:8px;align-items:center"><div class="seg" id="segTaxa"><button data-v="tf" class="on">TF</button><button data-v="tg">TG</button></div><button class="tbtn" data-table="cTaxa">Tabela</button></div></div>
+        <div class="legend" id="lTaxa"></div>
+        <div class="chart" id="cTaxa"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>Ocorrências por mês</h4><button class="tbtn" data-table="cOcor">Tabela</button></div>
+        <div class="legend" id="lOcor"></div>
+        <div class="chart" id="cOcor"></div>
+      </div>
+    </div>
+    <div class="grid g2b" style="margin-top:14px">
+      <div class="card"><div class="card-h"><h4>Ocorrências por setor</h4><span class="hint">todos os tipos, no ano</span></div><div class="chart" id="cSetor"></div></div>
+      <div class="card"><div class="card-h"><h4>Ocorrências por causa</h4><span class="hint">no ano</span></div><div class="chart" id="cCausa"></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-prev">
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4>Cumprimento dos programas</h4><span class="hint">realizado ÷ planejado · traço = meta</span></div>
+        <div class="prog" id="progs"></div>
+      </div>
+      <div class="card">
+        <div class="mini" id="prevChips" style="grid-template-columns:1fr 1fr"></div>
+        <div class="card-h"><h4>Desvios reportados por mês</h4><button class="tbtn" data-table="cDesv">Tabela</button></div>
+        <div class="chart" id="cDesv"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-pes">
+    <div class="mini" id="pesChips"></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4 id="tPes">Por mês</h4>
+          <div style="display:flex;gap:8px;align-items:center"><div class="seg" id="segPes"><button data-v="absent" class="on">Absenteísmo</button><button data-v="turnover">Turnover</button></div><button class="tbtn" data-table="cPes">Tabela</button></div></div>
+        <div class="legend" id="lPes"></div>
+        <div class="chart" id="cPes"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4 id="tPesSet">Por setor</h4><span class="hint">traço = meta</span></div>
+        <div class="chart" id="cPesSet"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-epi">
+    <div class="mini" id="epiChips"></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4 id="tEpi">Compra de EPIs por mês</h4>
+          <div style="display:flex;gap:8px;align-items:center"><div class="seg" id="segEpi"><button data-v="gasto" class="on">Gasto (R$)</button><button data-v="colab">Por colaborador</button></div><button class="tbtn" data-table="cEpi">Tabela</button></div></div>
+        <div class="legend" id="lEpi"></div>
+        <div class="chart" id="cEpi"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>Consumo acumulado do orçamento</h4><button class="tbtn" data-table="cEpiAc">Tabela</button></div>
+        <div class="legend" id="lEpiAc"></div>
+        <div class="chart" id="cEpiAc"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-uni">
+    <div class="mini" id="uniChips"></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h4>Custo de uniformes por mês (R$)</h4><button class="tbtn" data-table="cUni">Tabela</button></div>
+        <div class="legend" id="lUni"></div>
+        <div class="chart" id="cUni"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h4>Distribuição no ano</h4></div>
+        <div class="chart" id="cDonut"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot"><span id="fonte"></span><span>Verde: dentro da meta · Amarelo: atenção · Vermelho: fora da meta</span></footer>
+</div>
+<div class="tip" id="tip"></div>
+<div class="drop" id="drop">Solte a planilha .xlsx aqui</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Leitor de .xlsx sem dependências (zip + XML) e extrator dos indicadores ===== */
+const SST = (() => {
+  const td = new TextDecoder("utf-8");
+
+  async function inflateRaw(bytes) {
+    const ds = new DecompressionStream("deflate-raw");
+    const stream = new Blob([bytes]).stream().pipeThrough(ds);
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
+  async function unzip(buf, wanted) {
+    const u8 = new Uint8Array(buf), dv = new DataView(buf);
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error("Arquivo não parece ser um .xlsx válido.");
+    const n = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const out = {};
+    for (let k = 0; k < n; k++) {
+      const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+      const lho = dv.getUint32(p + 42, true);
+      const name = td.decode(u8.subarray(p + 46, p + 46 + nlen));
+      p += 46 + nlen + xlen + clen;
+      if (!wanted(name)) continue;
+      const ln = dv.getUint16(lho + 26, true), lx = dv.getUint16(lho + 28, true);
+      const data = u8.subarray(lho + 30 + ln + lx, lho + 30 + ln + lx + csize);
+      out[name] = td.decode(method === 0 ? data : await inflateRaw(data));
+    }
+    return out;
+  }
+
+  const ent = s => s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (m, e) => {
+    if (e[0] === "#") return String.fromCodePoint(e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10));
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e.toLowerCase()];
+  });
+  const texts = xml => { let s = ""; xml.replace(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g, (m, t) => { s += t; }); return ent(s); };
+
+  function parseSheet(xml, sst) {
+    const cells = new Map();
+    const re = /<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+    let m;
+    while ((m = re.exec(xml))) {
+      const [, ref, attrs, body] = m;
+      if (!body) continue;
+      const t = (attrs.match(/\st="([^"]+)"/) || [])[1];
+      const vm = body.match(/<v>([\s\S]*?)<\/v>/);
+      let v = null;
+      if (t === "s") v = vm ? sst[+vm[1]] : null;
+      else if (t === "inlineStr") v = texts(body);
+      else if (t === "str" || t === "e") v = vm ? ent(vm[1]) : null;
+      else if (t === "b") v = vm ? vm[1] === "1" : null;
+      else v = vm && vm[1] !== "" ? Number(vm[1]) : null;
+      if (v === "") v = null;
+      cells.set(ref, v);
+    }
+    return cells;
+  }
+
+  async function readWorkbook(buf, sheetNames) {
+    const files = await unzip(buf, n => n === "xl/workbook.xml" || n === "xl/_rels/workbook.xml.rels" || n === "xl/sharedStrings.xml" || n.startsWith("xl/worksheets/sheet"));
+    const wb = files["xl/workbook.xml"], rels = files["xl/_rels/workbook.xml.rels"];
+    if (!wb) throw new Error("Arquivo não parece ser uma planilha do Excel.");
+    const sst = [];
+    (files["xl/sharedStrings.xml"] || "").replace(/<si>([\s\S]*?)<\/si>/g, (m, si) => { sst.push(texts(si)); });
+    const relMap = {};
+    rels.replace(/<Relationship\s([^>]*)\/?>/g, (m, a) => {
+      const id = (a.match(/Id="([^"]+)"/) || [])[1], tg = (a.match(/Target="([^"]+)"/) || [])[1];
+      relMap[id] = tg.replace(/^\/?xl\//, "").replace(/^\//, "");
+    });
+    const sheets = {};
+    wb.replace(/<sheet\s([^>]*)\/>/g, (m, a) => {
+      const name = ent((a.match(/name="([^"]+)"/) || [])[1]), id = (a.match(/r:id="([^"]+)"/) || [])[1];
+      if (sheetNames.includes(name)) sheets[name] = parseSheet(files["xl/" + relMap[id]] || "", sst);
+    });
+    return sheets;
+  }
+
+  /* ---------- extrator ---------- */
+  const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  const colName = n => { let s = ""; while (n) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const num = v => (typeof v === "number" && isFinite(v) ? v : null);
+  const serialToISO = v => (typeof v === "number" && v > 1 ? new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000).toISOString().slice(0, 10) : null);
+
+  const COLS = [["emp", "empregados"], ["hht", "hht"], ["acid15p", "acidente com afastamento"], ["acid15m", "acidente c/ afastamento"],
+    ["semAf", "acid. s/ afast"], ["fatais", "fatais"], ["quase", "quase acidentes"], ["doenca", "doencas ocupacionais"],
+    ["dias", "dias perdidos"], ["tftot", "tf total"], ["tf", "tf (c/"], ["tg", "tg"], ["trein", "treinamentos %"],
+    ["insp", "inspecoes %"], ["acoes", "acoes no prazo"], ["dds", "dds %"], ["aso", "aso %"], ["hTrein", "horas trein"],
+    ["desvios", "desvios"], ["epi", "compra de epis"], ["epiOrcMes", "orcamento mensal epis"], ["adm", "admissoes"],
+    ["desl", "desligamentos"], ["turnover", "turnover %"], ["atest", "atestados (n"], ["diasAtest", "dias de atestado"],
+    ["absent", "absenteismo %"], ["ps", "acid. c/ primeiros"], ["horasAtest", "horas de atestado"]];
+  const CONFIG = { empresa: "nome da empresa", unidade: "unidade", ano: "ano de referencia" };
+  const METAS = { tf: "taxa de frequencia", tg: "taxa de gravidade", acidMax: "acidentes com afastamento (max", fatalMax: "fatalidades",
+    trein: "cumprimento do plano de treinamentos", insp: "cumprimento do plano de inspecoes", acoes: "acoes corretivas",
+    dds: "realizacao de dds", aso: "exames ocupacionais", epiOrc: "orcamento anual de compra de epis", turnover: "turnover anual",
+    absent: "absenteismo por atestados" };
+
+  function extract(sheets, fonte) {
+    const C = sheets["Calculos"], K = sheets["Config"], U = sheets["Uniformes"];
+    if (!C || !K) throw new Error("Não encontrei as abas 'Calculos' e 'Config'. Confira se é a planilha de KPIs de SST.");
+    const g = (S, c, r) => (S ? S.get(colName(c) + r) ?? null : null);
+    const findRow = (S, col, pred, from = 1, to = 400) => { for (let r = from; r <= to; r++) if (pred(norm(g(S, col, r)))) return r; return -1; };
+
+    // Config
+    const cfg = {}, metas = {};
+    for (let r = 1; r <= 80; r++) {
+      const lab = norm(g(K, 2, r)); if (!lab) continue;
+      for (const [k, p] of Object.entries(CONFIG)) if (cfg[k] === undefined && lab.startsWith(p)) cfg[k] = g(K, 3, r);
+      for (const [k, p] of Object.entries(METAS)) if (metas[k] === undefined && lab.startsWith(p)) metas[k] = num(g(K, 3, r));
+    }
+
+    // Calculos – tabela mensal
+    const hr = findRow(C, 1, s => s === "mes");
+    const ar = findRow(C, 1, s => s === "acumulado");
+    if (hr < 0 || ar < 0) throw new Error("Estrutura da aba 'Calculos' não reconhecida.");
+    const colOf = {};
+    for (let c = 2; c <= 80; c++) {
+      const h = norm(g(C, c, hr)); if (!h) continue;
+      for (const [k, p] of COLS) if (colOf[k] === undefined && h.startsWith(p)) { colOf[k] = c; break; }
+    }
+    const meses = [], mensal = {}, acum = {};
+    for (let r = hr + 1; r < ar; r++) meses.push(String(g(C, 1, r) ?? ""));
+    for (const [k] of COLS) {
+      const c = colOf[k];
+      mensal[k] = meses.map((_, i) => (c ? num(g(C, c, hr + 1 + i)) : null));
+      acum[k] = c ? num(g(C, c, ar)) : null;
+    }
+
+    // tabelas por setor
+    const block = (title, cols, maxRows = 20) => {
+      const r0 = findRow(C, 1, s => s.startsWith(title));
+      if (r0 < 0) return [];
+      const out = [];
+      for (let r = r0 + 2; r < r0 + 2 + maxRows; r++) {
+        const name = g(C, 1, r);
+        if (norm(name) === "total" || norm(name).endsWith("(ano de referencia)")) break;
+        if (name === null || name === "") continue;
+        if (g(C, 2, r) === null) break;
+        const o = { nome: String(name) };
+        cols.forEach((k, i) => (o[k] = num(g(C, 2 + i, r))));
+        out.push(o);
+      }
+      return out;
+    };
+    const setores = {
+      absent: block("absenteismo por setor", ["efetivo", "atest", "dias", "pct"]),
+      turnover: block("turnover por setor", ["efetivo", "adm", "desl", "pct"]),
+      ocorr: block("ocorrencias por setor", ["n"]),
+      causas: block("ocorrencias por causa", ["n"]),
+    };
+    const rU = findRow(C, 1, s => s.startsWith("data do ultimo acidente"));
+    const rI = findRow(C, 1, s => s.startsWith("inicio da contagem"));
+    const diasSem = { ultimo: rU > 0 ? serialToISO(g(C, 2, rU)) : null, inicio: rI > 0 ? serialToISO(g(C, 2, rI)) : null };
+
+    // Uniformes
+    let unif = null;
+    if (U) {
+      const lab = (txt, from = 1) => findRow(U, 1, s => s === txt, from, 120);
+      const orc = {};
+      [["prod", "producao"], ["man", "manutencao"], ["ext", "externos"]].forEach(([k, t]) => { const r = lab(t); orc[k] = r > 0 ? num(g(U, 2, r)) : null; });
+      const hm = lab("mes"); const tr = lab("total / media");
+      const um = { prod: [], man: [], ext: [], tot: [], pecas: [] };
+      if (hm > 0) for (let r = hm + 1; r < (tr > 0 ? tr : hm + 14); r++) {
+        if (norm(g(U, 1, r)).startsWith("exemplo")) continue;
+        um.prod.push(num(g(U, 2, r))); um.man.push(num(g(U, 4, r))); um.ext.push(num(g(U, 6, r)));
+        um.tot.push(num(g(U, 8, r))); um.pecas.push(num(g(U, 9, r)));
+      }
+      const ua = tr > 0 ? { prod: num(g(U, 2, tr)), man: num(g(U, 4, tr)), ext: num(g(U, 6, tr)), tot: num(g(U, 8, tr)),
+        pecas: num(g(U, 9, tr)), porEmp: num(g(U, 10, tr)), pctOrc: num(g(U, 12, tr)) } : {};
+      const tb = lab("total"); orc.tot = tb > 0 ? num(g(U, 2, tb)) : null;
+      unif = { orc, mensal: um, acum: ua };
+    }
+    return { meta: { empresa: cfg.empresa ?? "", unidade: cfg.unidade ?? "", ano: cfg.ano ?? "", fonte: fonte || "", lidoEm: new Date().toISOString() },
+      metas, meses, mensal, acum, setores, diasSem, unif };
+  }
+
+  async function fromBuffer(buf, fonte) {
+    const sheets = await readWorkbook(buf, ["Calculos", "Config", "Uniformes"]);
+    return extract(sheets, fonte);
+  }
+  return { fromBuffer };
+})();
+if (typeof module !== "undefined") module.exports = SST;
+
+</script>
+<script id="seed" type="application/json">{"meta":{"empresa":"Industria de Panificação Newbread LTDA","unidade":"Matriz","ano":2026,"fonte":"","lidoEm":"2026-11-16T18:46:49.019Z"},"metas":{"tf":20,"tg":200,"acidMax":0,"fatalMax":0,"trein":0.95,"insp":0.9,"acoes":0.9,"dds":0.95,"aso":1,"epiOrc":45000,"turnover":0.1,"absent":0.03},"meses":["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],"mensal":{"emp":[188,200,200,200,200,200,210,210,210,200,0,0],"hht":[41360,44000,44000,44000,44000,44000,46200,46200,46200,44000,0,0],"acid15p":[0,0,0,0,0,1,0,0,0,0,0,0],"acid15m":[0,0,0,1,0,0,1,1,2,2,0,0],"semAf":[0,0,1,0,0,0,0,0,0,0,0,0],"fatais":[0,0,0,0,0,0,0,0,0,0,0,0],"quase":[0,0,0,0,0,0,0,0,0,0,0,0],"doenca":[0,0,0,0,0,0,0,0,0,0,0,0],"dias":[0,0,0,2,0,17,2,2,5,2,0,0],"tftot":[0,0,22.727272727272727,22.727272727272727,0,22.727272727272727,21.645021645021647,21.645021645021647,43.29004329004329,45.45454545454545,null,null],"tf":[0,0,0,22.727272727272727,0,22.727272727272727,21.645021645021647,21.645021645021647,43.29004329004329,45.45454545454545,null,null],"tg":[0,0,0,45.45454545454545,0,386.3636363636364,43.29004329004329,43.29004329004329,108.22510822510823,45.45454545454545,null,null],"trein":[1,1,null,1,0.8333333333333334,1,1,1,null,null,null,null],"insp":[0,0,0,0,0,0,0,0,0.5,2.5,null,null],"acoes":[null,null,null,null,null,null,null,null,null,null,null,null],"dds":[1,1,0.8571428571428571,null,1,1,null,null,1,1,null,null],"aso":[1,1,1,1,1,1,1,1,1,1,null,null],"hTrein":[1,1,0,1,5,1,2,1,0,0,null,null],"desvios":[33,80,153,97,33,21,12,16,15,15,0,0],"epi":[0,11104.88,1850.81,1850.81,11104.88,1850.81,1850.85,11104.88,1850.81,1850.81,0,0],"epiOrcMes":[3750,3750,3750,3750,3750,3750,3750,3750,3750,3750,3750,3750],"adm":[21,13,13,14,24,13,15,17,11,9,3,0],"desl":[16,17,18,15,23,9,11,15,14,15,4,0],"turnover":[0.09840425531914894,0.075,0.0775,0.0725,0.1175,0.055,0.06190476190476191,0.0761904761904762,0.05952380952380952,0.06,null,null],"atest":[23,24,42,34,39,3,60,48,38,22,0,0],"diasAtest":[38.66458333333333,47.59791666666667,62.40625,37.10208333333333,23.585416666666667,30.40625,68.2375,73.75625,42.36666666666667,43.6875,0,0],"absent":[0.00979346082404593,0.011899479166666668,0.014183238636363636,0.009275520833333334,0.005896354166666667,0.007239583333333333,0.01412784679089027,0.016724773242630383,0.009606953892668179,0.010401785714285714,null,null],"ps":[0,2,0,0,0,0,0,1,0,0,0,0],"horasAtest":[29.316666666666666,28.783333333333335,67.25,48.81666666666668,68.68333333333335,3.25,73.89999999999996,166.04999999999998,58.93333333333334,29.499999999999996,0,0]},"acum":{"emp":201.8,"hht":443960,"acid15p":1,"acid15m":7,"semAf":1,"fatais":0,"quase":0,"doenca":0,"dias":30,"tftot":20.272096585277954,"tf":18.019641409135957,"tg":67.57365528425984,"trein":0.9230769230769231,"insp":0.3,"acoes":null,"dds":0.9809523809523809,"aso":1,"hTrein":11.982160555004954,"desvios":475,"epi":44419.53999999999,"epiOrcMes":45000,"adm":153,"desl":157,"turnover":0.7680872150644201,"atest":333,"diasAtest":467.8104166666667,"absent":0.011038992323060708,"ps":3,"horasAtest":574.4833333333333},"setores":{"absent":[{"nome":"DEPOSITO MP","efetivo":2,"atest":1,"dias":1,"pct":0.002380952380952381},{"nome":"PESAGEM/PRÉ-MIX","efetivo":3,"atest":5,"dias":30.68125,"pct":0.04870039682539682},{"nome":"PRODUÇÃO DIVERSOS","efetivo":13,"atest":18,"dias":20.814583333333335,"pct":0.0076243894993895},{"nome":"PRODUÇÃO","efetivo":42,"atest":85,"dias":94.72708333333333,"pct":0.010740032123960694},{"nome":"EMBALAGEM","efetivo":35,"atest":112,"dias":159.80208333333334,"pct":0.021741780045351475},{"nome":"EXPEDIÇÃO","efetivo":6,"atest":6,"dias":2.33125,"pct":0.0018501984126984125},{"nome":"MANUTENÇÃO","efetivo":7,"atest":8,"dias":33.72291666666666,"pct":0.022940759637188207},{"nome":"VENDAS","efetivo":31,"atest":10,"dias":34.0375,"pct":0.0052284946236559144},{"nome":"LOGISTICA","efetivo":42,"atest":19,"dias":58.5875,"pct":0.006642573696145125},{"nome":"ADMINISTRATIVO","efetivo":18,"atest":48,"dias":19.5375,"pct":0.005168650793650794},{"nome":"SESMT","efetivo":1,"atest":2,"dias":2,"pct":0.009523809523809525},{"nome":"SERVIÇOS GERAIS","efetivo":3,"atest":19,"dias":10.568750000000001,"pct":0.016775793650793652}],"turnover":[{"nome":"DEPOSITO MP","efetivo":2,"adm":0,"desl":0,"pct":0},{"nome":"PESAGEM/PRÉ-MIX","efetivo":3,"adm":0,"desl":1,"pct":0.16666666666666666},{"nome":"PRODUÇÃO DIVERSOS","efetivo":13,"adm":1,"desl":0,"pct":0.038461538461538464},{"nome":"PRODUÇÃO","efetivo":42,"adm":44,"desl":57,"pct":1.2023809523809523},{"nome":"EMBALAGEM","efetivo":35,"adm":47,"desl":29,"pct":1.0857142857142856},{"nome":"EXPEDIÇÃO","efetivo":6,"adm":2,"desl":2,"pct":0.3333333333333333},{"nome":"MANUTENÇÃO","efetivo":7,"adm":2,"desl":2,"pct":0.2857142857142857},{"nome":"VENDAS","efetivo":31,"adm":16,"desl":38,"pct":0.8709677419354839},{"nome":"LOGISTICA","efetivo":42,"adm":33,"desl":15,"pct":0.5714285714285714},{"nome":"ADMINISTRATIVO","efetivo":18,"adm":7,"desl":11,"pct":0.5},{"nome":"SESMT","efetivo":1,"adm":0,"desl":0,"pct":0},{"nome":"SERVIÇOS GERAIS","efetivo":3,"adm":1,"desl":2,"pct":0.5}],"ocorr":[{"nome":"DEPOSITO MP","n":0},{"nome":"PESAGEM/PRÉ-MIX","n":0},{"nome":"PRODUÇÃO DIVERSOS","n":1},{"nome":"PRODUÇÃO","n":4},{"nome":"EMBALAGEM","n":3},{"nome":"EXPEDIÇÃO","n":0},{"nome":"MANUTENÇÃO","n":2},{"nome":"VENDAS","n":1},{"nome":"LOGISTICA","n":1},{"nome":"ADMINISTRATIVO","n":0},{"nome":"SESMT","n":0},{"nome":"SERVIÇOS GERAIS","n":0}],"causas":[{"nome":"Aprisionamento em, sobre ou entre objeto parado e outro em movimento","n":1},{"nome":"Atrito ou abrasão","n":3},{"nome":"Esforço excessivo ao manejar, sacudir ou arremessar objeto","n":1},{"nome":"Atrito ou abrasão por manusear objeto","n":1},{"nome":"Aprisionamento em, sobre ou entre dois ou mais objetos em movimento","n":1},{"nome":"Queda de pessoa em mesmo nível","n":1},{"nome":"Reação do corpo a movimento involuntário","n":1},{"nome":"Movimentação de carga","n":2},{"nome":"Reação do corpo a movimento voluntário","n":1},{"nome":"Outros","n":0}]},"diasSem":{"ultimo":"2026-06-17","inicio":"2026-06-17"},"unif":{"orc":{"prod":40000,"man":3000,"ext":7000,"tot":50000},"mensal":{"prod":[null,null,null,5228,null,28042,null,null,null,2100,null,null],"man":[null,null,null,73,null,2976,null,null,null,null,null,null],"ext":[null,null,null,810,null,4005,null,null,null,914,null,null],"tot":[null,null,null,6111,null,35023,null,null,null,3014,null,null],"pecas":[null,null,null,90,null,513,null,null,null,50,null,null]},"acum":{"prod":35370,"man":3049,"ext":5729,"tot":44148,"pecas":653,"porEmp":218.77106045589693,"pctOrc":0.88296}}}</script>
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const NF = (d) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const f0 = v => v == null ? "–" : NF(0).format(v), f1 = v => v == null ? "–" : NF(1).format(v), f2 = v => v == null ? "–" : NF(2).format(v);
+const pct = (v, d = 1) => v == null ? "–" : NF(d).format(v * 100) + "%";
+const brl = (v, d = 0) => v == null ? "–" : "R$ " + NF(d).format(v);
+const brlK = v => v == null ? "–" : (Math.abs(v) >= 1000 ? "R$ " + NF(1).format(v / 1000) + " mil" : brl(v));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ICON = { good: "✓", warn: "!", crit: "✕", neu: "–" };
+const LS_KEY = "painelSST.dados.v1";
+
+const PRISTINE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+const MODE = "online";
+const VIEW = MODE !== "admin", ONLINE = MODE === "online";
+let D = JSON.parse($("#seed").textContent);
+if (!VIEW) try { const c = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (c && c.meta && (!D.meta.lidoEm || c.meta.lidoEm > D.meta.lidoEm)) D = c; } catch (e) {}
+const st = { period: "ano", tab: "seg", taxa: "tf", pes: "absent", epi: "gasto" };
+try { const t = localStorage.getItem("painelSST.tema"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+/* ---------- utilidades de dados ---------- */
+const hasMonth = i => (D.mensal.emp[i] || 0) > 0 || (D.mensal.hht[i] || 0) > 0;
+const monthsWithData = () => D.meses.map((m, i) => i).filter(hasMonth);
+const short = m => m.slice(0, 3);
+function status(v, meta, lowerBetter = true, warnBand = 0) {
+  if (v == null || meta == null || typeof v !== "number") return "neu";
+  if (lowerBetter) return v <= meta ? "good" : (warnBand && v <= meta * (1 + warnBand) ? "warn" : "crit");
+  return v >= meta ? "good" : (v >= meta - 0.1 ? "warn" : "crit");
+}
+const pillTxt = { good: "Dentro da meta", warn: "Atenção", crit: "Fora da meta", neu: "Sem dados" };
+const pill = (s, txt) => `<span class="pill ${s}">${ICON[s]} ${txt || pillTxt[s]}</span>`;
+const sel = (arr, acc) => st.period === "ano" ? acc : arr[st.period];
+
+/* ---------- tooltip ---------- */
+const tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); }
+function moveTip(e) { const w = tip.offsetWidth, h = tip.offsetHeight; let x = e.clientX + 14, y = e.clientY - h - 12; if (x + w > innerWidth - 8) x = e.clientX - w - 14; if (y < 8) y = e.clientY + 16; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+function bindTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mouseenter", e => { showTip(e, el.dataset.tip); const g = el.dataset.grp; if (g != null) root.querySelectorAll(".bar").forEach(b => b.classList.toggle("dim", b.dataset.grp !== g)); });
+    el.addEventListener("mousemove", moveTip);
+    el.addEventListener("mouseleave", () => { hideTip(); root.querySelectorAll(".bar").forEach(b => b.classList.remove("dim")); });
+  });
+}
+const tipRow = (k, label, val) => `<div class="r"><span>${k ? `<i class="k" style="background:${k}"></i>` : ""}${esc(label)}</span><em>${val}</em></div>`;
+
+/* ---------- gráficos SVG ---------- */
+function niceMax(v) { if (!v || v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+const roundTop = (x, y, w, h, r) => { r = Math.min(r, w / 2, h); return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; };
+
+/* barras verticais (simples ou empilhadas) + linha de meta opcional */
+function vbars(el, { cats, series, meta, fmt, axisFmt, height = 260, hi = null, tableTitle, integer = false }) {
+  const W = Math.max(280, el.clientWidth || 600), H = height, L = 46, R = 10, T = 12, B = 30;
+  const n = cats.length, pw = W - L - R, ph = H - T - B, bw = Math.min(34, pw / n * 0.58), step = pw / n;
+  const tot = cats.map((_, i) => series.reduce((s, sr) => s + (sr.values[i] || 0), 0));
+  const top = Math.max(...tot, meta || 0) * 1.08 || 1;
+  const raw = top / 4, p10 = Math.pow(10, Math.floor(Math.log10(raw))), nr = raw / p10;
+  let stp = (nr <= 1 ? 1 : nr <= 2 ? 2 : nr <= 5 ? 5 : 10) * p10;
+  if (integer && stp < 1) stp = 1;
+  const nT = Math.max(1, Math.ceil(top / stp)), mx = stp * nT;
+  const y = v => T + ph - (v / mx) * ph;
+  let g = "";
+  for (let k = 0; k <= nT; k++) { const v = stp * k, yy = y(v); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/><text x="${L - 8}" y="${yy + 4}" text-anchor="end">${(axisFmt || fmt)(v)}</text>`; }
+  let bars = "", hits = "";
+  cats.forEach((c, i) => {
+    const x = L + step * i + (step - bw) / 2; let acc = 0; const empty = !series.some(s => s.values[i] != null);
+    const segs = series.map(s => ({ s, v: s.values[i] || 0 })).filter(o => o.v > 0);
+    segs.forEach((o, j) => {
+      const y0 = y(acc), y1 = y(acc + o.v); acc += o.v; const top = j === segs.length - 1; const h = Math.max(0, y0 - y1 - (top ? 0 : 2));
+      bars += top ? `<path class="bar grow" data-grp="${i}" d="${roundTop(x, y1, bw, h, 4)}" fill="${o.s.color}" style="animation-delay:${i * 35}ms"/>`
+                  : `<rect class="bar grow" data-grp="${i}" x="${x}" y="${y1 + 2}" width="${bw}" height="${h}" fill="${o.s.color}" style="animation-delay:${i * 35}ms"/>`;
+    });
+    if (hi === i) bars += `<rect x="${L + step * i + 2}" y="${T}" width="${step - 4}" height="${ph}" rx="8" fill="var(--accent)" opacity=".10"/>`;
+    const lbl = `<text x="${L + step * i + step / 2}" y="${H - 10}" text-anchor="middle" style="${hi === i ? "fill:var(--tx);font-weight:700" : ""}">${short(c)}</text>`;
+    let tt = `<b>${esc(c)}</b>`; if (empty) tt += `<div class="r"><span>sem dados</span></div>`; else { series.forEach(s => tt += tipRow(series.length > 1 ? s.color : null, s.name, fmt(s.values[i]))); if (series.length > 1) tt += tipRow(null, "Total", fmt(tot[i])); }
+    if (meta != null) tt += tipRow(null, "Meta", fmt(meta));
+    hits += lbl + `<rect data-tip="${esc(tt)}" data-grp="${i}" x="${L + step * i}" y="${T}" width="${step}" height="${ph + B}" fill="transparent"/>`;
+  });
+  let m = "";
+  if (meta != null) { const yy = y(meta); m = `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--tx2)" stroke-width="2" stroke-dasharray="6 5"/><text x="${W - R}" y="${yy - 6}" text-anchor="end" style="fill:var(--tx2);font-weight:600">meta ${fmt(meta)}</text>`; }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(tableTitle || "")}">${g}${bars}${m}${hits}</svg>`;
+  el._table = () => tableHTML(["Mês", ...series.map(s => s.name), ...(meta != null ? ["Meta"] : [])], cats.map((c, i) => [c, ...series.map(s => fmt(s.values[i])), ...(meta != null ? [fmt(meta)] : [])]));
+  bindTips(el);
+}
+
+/* barras horizontais ordenadas + meta opcional */
+function hbars(el, { items, meta, fmt, color, max = 12 }) {
+  items = items.filter(o => o.v != null && o.v > 0).sort((a, b) => b.v - a.v).slice(0, max);
+  if (!items.length) { el.innerHTML = `<div class="empty">Nenhum registro no período.</div>`; el._table = null; return; }
+  const W = Math.max(280, el.clientWidth || 500), rowH = 30, LW = Math.min(170, W * 0.38), R = 64, T = 4, H = T + items.length * rowH + (meta != null ? 22 : 4);
+  const mx = Math.max(...items.map(o => o.v), meta || 0) * 1.05, pw = W - LW - R;
+  const x = v => LW + (v / mx) * pw;
+  let s = "";
+  items.forEach((o, i) => {
+    const yy = T + i * rowH, bh = 16, w = Math.max(3, x(o.v) - LW);
+    const nm = o.n.length > 24 ? o.n.slice(0, 23) + "…" : o.n;
+    const c = typeof color === "function" ? color(o) : color;
+    s += `<text x="${LW - 10}" y="${yy + 17}" text-anchor="end" style="fill:var(--tx2)">${esc(nm)}</text>`;
+    s += `<rect class="bar growx" data-grp="${i}" x="${LW}" y="${yy + 5}" width="${w}" height="${bh}" rx="4" fill="${c}" style="animation-delay:${i * 40}ms"/>`;
+    s += `<text x="${LW + w + 8}" y="${yy + 17}" style="fill:var(--tx);font-weight:600">${fmt(o.v)}</text>`;
+    let tt = `<b>${esc(o.n)}</b>` + tipRow(null, o.label || "Valor", fmt(o.v)); if (o.extra) tt += o.extra; if (meta != null) tt += tipRow(null, "Meta", fmt(meta));
+    s += `<rect data-tip="${esc(tt)}" data-grp="${i}" x="0" y="${yy}" width="${W}" height="${rowH}" fill="transparent"/>`;
+  });
+  if (meta != null) { const xm = x(meta); s += `<line x1="${xm}" x2="${xm}" y1="${T}" y2="${T + items.length * rowH}" stroke="var(--tx2)" stroke-width="2" stroke-dasharray="5 4"/><text x="${xm}" y="${H - 4}" text-anchor="middle" style="fill:var(--tx2);font-weight:600">meta ${fmt(meta)}</text>`; }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}">${s}</svg>`;
+  bindTips(el);
+}
+
+function donut(el, parts, fmt) {
+  const tot = parts.reduce((s, p) => s + (p.v || 0), 0);
+  if (!tot) { el.innerHTML = `<div class="empty">Sem lançamentos de uniformes no ano.</div>`; return; }
+  const W = Math.max(260, el.clientWidth || 320), H = 270, cx = Math.min(W / 2, 150), cy = H / 2, r = 100, ri = 64;
+  let a0 = -Math.PI / 2, s = "";
+  parts.forEach((p, i) => {
+    if (!p.v) return; const a1 = a0 + p.v / tot * Math.PI * 2, gap = parts.filter(q => q.v).length > 1 ? 0.015 : 0, large = a1 - a0 > Math.PI ? 1 : 0;
+    const P = (rr, a) => `${cx + rr * Math.cos(a)},${cy + rr * Math.sin(a)}`;
+    const d = `M${P(r, a0 + gap)}A${r},${r} 0 ${large} 1 ${P(r, a1 - gap)}L${P(ri, a1 - gap)}A${ri},${ri} 0 ${large} 0 ${P(ri, a0 + gap)}Z`;
+    s += `<path class="bar" data-grp="${i}" d="${d}" fill="${p.c}" data-tip="${esc(`<b>${p.n}</b>` + tipRow(null, "Custo", fmt(p.v)) + tipRow(null, "Participação", pct(p.v / tot, 0)))}"/>`;
+    a0 = a1;
+  });
+  s += `<text x="${cx}" y="${cy - 4}" text-anchor="middle" style="fill:var(--tx);font-size:22px;font-weight:700">${brlK(tot)}</text><text x="${cx}" y="${cy + 18}" text-anchor="middle">total no ano</text>`;
+  let lg = ""; const lx = cx + r + 30;
+  if (W > lx + 120) parts.forEach((p, i) => { const yy = cy - 40 + i * 34; lg += `<rect x="${lx}" y="${yy - 10}" width="12" height="12" rx="3" fill="${p.c}"/><text x="${lx + 20}" y="${yy}" style="fill:var(--tx);font-weight:600">${p.n}</text><text x="${lx + 20}" y="${yy + 16}">${fmt(p.v)} · ${pct((p.v || 0) / tot, 0)}</text>`; });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}">${s}${lg}</svg>`;
+  bindTips(el);
+}
+
+function spark(vals, color, meta) {
+  const pts = vals.map((v, i) => [i, v]).filter(p => p[1] != null);
+  if (pts.length < 2) return "";
+  const W = 96, H = 34, mx = Math.max(...pts.map(p => p[1]), meta || 0) || 1, n = vals.length - 1 || 1;
+  const X = i => 3 + i / n * (W - 6), Y = v => H - 4 - v / mx * (H - 8);
+  const d = pts.map((p, k) => (k ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+  const last = pts[pts.length - 1];
+  const m = meta != null ? `<line x1="2" x2="${W - 2}" y1="${Y(meta)}" y2="${Y(meta)}" stroke="var(--tx3)" stroke-dasharray="3 3"/>` : "";
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}">${m}<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(last[0])}" cy="${Y(last[1])}" r="3.5" fill="${color}" stroke="var(--card)" stroke-width="2"/></svg>`;
+}
+function tableHTML(head, rows) { return `<table class="table"><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`; }
+
+/* contagem animada */
+function countUp(el, to, fmt) {
+  if (to == null || typeof to !== "number" || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = typeof to === "number" ? fmt(to) : (to ?? "–"); return; }
+  const t0 = performance.now(), dur = 900;
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* ---------- render ---------- */
+function renderHeader() {
+  const m = D.meta;
+  $("#sub").textContent = [m.empresa, m.unidade, m.ano ? "Ano " + m.ano : ""].filter(Boolean).join("  ·  ");
+  const p = $("#period"), cur = st.period;
+  p.innerHTML = `<option value="ano">Acumulado do ano</option>` + D.meses.map((x, i) => `<option value="${i}" ${hasMonth(i) ? "" : "disabled"}>${x}${hasMonth(i) ? "" : " (sem dados)"}</option>`).join("");
+  p.value = String(cur);
+  const lido = new Date(m.lidoEm);
+  $("#fonte").textContent = VIEW ? `Versão para visualização · dados atualizados em ${lido.toLocaleDateString("pt-BR")} às ${lido.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : `Fonte: ${m.fonte || "planilha de KPIs"} · dados lidos em ${lido.toLocaleDateString("pt-BR")} às ${lido.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+function renderHero() {
+  const M = D.metas, A = D.acum, mm = D.mensal, isAno = st.period === "ano";
+  const per = isAno ? "acumulado do ano" : D.meses[st.period];
+  // dias sem acidente
+  const ref = [D.diasSem.ultimo, D.diasSem.inicio].filter(Boolean).sort().pop();
+  let dias = null, desde = "";
+  if (ref) { const [y, mo, d] = ref.split("-").map(Number); const t = new Date(); dias = Math.max(0, Math.floor((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(y, mo - 1, d)) / 86400000)); desde = `${String(d).padStart(2, "0")}/${String(mo).padStart(2, "0")}/${y}`; }
+  const tf = sel(mm.tf, A.tf), tg = sel(mm.tg, A.tg), ab = sel(mm.absent, A.absent), to = sel(mm.turnover, A.turnover);
+  const toMeta = M.turnover == null ? null : (isAno ? M.turnover : M.turnover / 12);
+  const nAf = isAno ? (A.acid15p || 0) + (A.acid15m || 0) : (mm.acid15p[st.period] || 0) + (mm.acid15m[st.period] || 0);
+  const sTF = status(tf, M.tf), sTG = status(tg, M.tg), sAB = status(ab, M.absent), sTO = status(to, toMeta);
+  const months = D.meses.map((_, i) => hasMonth(i) ? i : null);
+  const sp = arr => months.map(i => i == null ? null : arr[i]);
+  const T = (id, title, val, fmt, sub, s, sparkArr, color, meta) =>
+    `<div class="tile"><h3>${title}</h3><div class="val" id="${id}">–</div><div class="sub">${sub}</div><div class="foot">${pill(s)}${spark(sp(sparkArr), color, meta)}</div></div>`;
+  $("#hero").innerHTML =
+    `<div class="tile big ${dias != null && dias < 30 ? "alert" : ""}"><h3>Dias sem acidente com afastamento</h3>
+      <div><span class="val" id="hDias">–</span><span class="unit">dias</span></div>
+      <div class="sub">${desde ? "desde " + desde : "sem registro"} · contagem em dias corridos até hoje</div>
+      <div class="foot">${pill(dias == null ? "neu" : dias >= 90 ? "good" : dias >= 30 ? "warn" : "crit", dias == null ? "Sem dados" : dias >= 90 ? "Sequência saudável" : dias >= 30 ? "Em recuperação" : "Acidente recente")}<span class="sub">${f0(nAf)} acid. c/ afast. (${per})</span></div></div>` +
+    T("hTF", "Taxa de frequência (TF)", tf, f2, `${per} · meta ≤ ${f0(M.tf)}`, sTF, mm.tf, "var(--s1)", M.tf) +
+    T("hTG", "Taxa de gravidade (TG)", tg, f2, `${per} · meta ≤ ${f0(M.tg)}`, sTG, mm.tg, "var(--s1)", M.tg) +
+    T("hAB", "Absenteísmo", ab, pct, `${per} · meta ≤ ${pct(M.absent)}`, sAB, mm.absent, "var(--s2)", M.absent) +
+    T("hTO", "Turnover", to, pct, `${per} · meta ≤ ${pct(toMeta)}${isAno ? " ao ano" : " no mês"}`, sTO, mm.turnover, "var(--s2)", isAno ? null : toMeta);
+  countUp($("#hDias"), dias, f0); countUp($("#hTF"), tf, f2); countUp($("#hTG"), tg, f2); countUp($("#hAB"), ab, v => pct(v)); countUp($("#hTO"), to, v => pct(v));
+}
+
+const hiIdx = () => st.period === "ano" ? null : Number(st.period);
+const legend = (el, items) => { $(el).innerHTML = items.map(([c, n, dash]) => `<span><i class="${dash ? "dash" : ""}" style="${dash ? "" : "background:" + c}"></i>${esc(n)}</span>`).join(""); };
+
+function renderSeg() {
+  const A = D.acum, mm = D.mensal, i = hiIdx(), v = k => i == null ? A[k] : mm[k][i];
+  const chips = [["Acid. c/ afast. >15 dias", v("acid15p")], ["Acid. c/ afast. ≤15 dias", v("acid15m")], ["Acid. sem afastamento", v("semAf")], ["Fatalidades", v("fatais")],
+    ["Quase acidentes", v("quase")], ["1º socorros", v("ps")], ["Dias perdidos", v("dias")]];
+  $("#segChips").innerHTML = chips.map(([n, x]) => `<div class="chip"><b>${f0(x)}</b><span>${n}</span></div>`).join("");
+  const k = st.taxa, meta = k === "tf" ? D.metas.tf : D.metas.tg;
+  $("#tTaxa").textContent = k === "tf" ? "Taxa de frequência por mês" : "Taxa de gravidade por mês";
+  legend("#lTaxa", [[css("--s1"), k === "tf" ? "TF (acid. c/ afastamento por milhão de HHT)" : "TG (dias perdidos por milhão de HHT)"], [null, "Meta", true]]);
+  vbars($("#cTaxa"), { cats: D.meses, series: [{ name: k.toUpperCase(), color: "var(--s1)", values: mm[k].map((x, j) => hasMonth(j) ? x : null) }], meta, fmt: f2, axisFmt: f0, hi: i, tableTitle: k });
+  const S = [["Com afast. >15 dias (e fatais)", "acid15p", "var(--s1)"], ["Com afast. ≤15 dias", "acid15m", "var(--s2)"], ["Sem afastamento", "semAf", "var(--s3)"], ["1º socorros", "ps", "var(--s4)"]];
+  legend("#lOcor", S.map(s => [css(s[2].slice(4, -1)), s[0]]));
+  vbars($("#cOcor"), { cats: D.meses, series: S.map(s => ({ name: s[0], color: s[2], values: mm[s[1]].map((x, j) => hasMonth(j) || x ? x : null) })), fmt: f0, axisFmt: v => NF(0).format(v), hi: i, height: 230, integer: true });
+  hbars($("#cSetor"), { items: D.setores.ocorr.map(o => ({ n: o.nome, v: o.n, label: "Ocorrências" })), fmt: f0, color: "var(--s1)" });
+  hbars($("#cCausa"), { items: D.setores.causas.map(o => ({ n: o.nome, v: o.n, label: "Ocorrências" })), fmt: f0, color: "var(--s3)", max: 8 });
+}
+
+function renderPrev() {
+  const A = D.acum, M = D.metas, mm = D.mensal, i = hiIdx(), v = k => i == null ? A[k] : mm[k][i];
+  const P = [["Treinamentos", "trein"], ["Inspeções de segurança", "insp"], ["Ações corretivas no prazo", "acoes"], ["DDS realizados", "dds"], ["Exames (ASO)", "aso"]];
+  $("#progs").innerHTML = P.map(([n, k]) => {
+    const x = v(k), m = M[k], s = status(x, m, false), c = { good: "var(--good)", warn: "var(--warn)", crit: "var(--crit)", neu: "var(--tx3)" }[s];
+    const w = x == null ? 0 : Math.min(100, x * 100);
+    return `<div class="prow" data-tip="${esc(`<b>${n}</b>` + tipRow(null, "Realizado", pct(x)) + tipRow(null, "Meta", pct(m, 0)))}"><div class="nm">${n}</div>
+      <div class="track"><div class="fill growx" style="width:${w}%;background:${c}"></div>${m != null ? `<div class="tick" style="left:calc(${Math.min(100, m * 100)}% - 1px)"></div>` : ""}</div>
+      <div class="pv">${x == null ? "–" : pct(x, 0)}</div><div class="pl">${pill(s, x == null ? "Sem dados" : null)}</div></div>`;
+  }).join("");
+  bindTips($("#progs"));
+  $("#prevChips").innerHTML = `<div class="chip"><b>${f0((v("desvios") || 0) + (v("quase") || 0))}</b><span>Desvios + quase acidentes</span></div><div class="chip"><b>${f1(v("hTrein"))} h</b><span>Treinamento por colaborador</span></div>`;
+  vbars($("#cDesv"), { cats: D.meses, series: [{ name: "Desvios reportados", color: "var(--s3)", values: mm.desvios.map((x, j) => hasMonth(j) ? x : null) }], fmt: f0, hi: i, height: 220, integer: true });
+}
+
+function renderPes() {
+  const A = D.acum, M = D.metas, mm = D.mensal, i = hiIdx(), v = k => i == null ? A[k] : mm[k][i];
+  const epiPct = A.epi != null && M.epiOrc ? A.epi / M.epiOrc : null;
+  const sEpi = epiPct == null ? "neu" : epiPct > 1 ? "crit" : epiPct > 0.9 ? "warn" : "good";
+  $("#pesChips").innerHTML =
+    `<div class="chip"><b>${f0(v("atest"))}</b><span>Atestados médicos ${i == null ? "· " + f1(A.atest / (A.emp || 1) * 100) + " por 100 empregados" : ""}</span></div>` +
+    `<div class="chip"><b>${f1(v("diasAtest"))}</b><span>Dias de atestado (inclui ${f0(v("horasAtest"))} h)</span></div>` +
+    `<div class="chip"><b>${f0(v("adm"))} / ${f0(v("desl"))}</b><span>Admissões / desligamentos</span></div>` +
+    `<div class="chip"><b>${brlK(v("epi"))}</b><span>Compra de EPIs ${i == null ? "· " + pct(epiPct, 0) + " do orçamento " : ""}${i == null ? pill(sEpi, sEpi === "neu" ? "Sem orçamento" : sEpi === "good" ? "No orçamento" : sEpi === "warn" ? "Perto do limite" : "Acima") : ""}</span></div>`;
+  const k = st.pes, isAb = k === "absent", meta = isAb ? M.absent : (M.turnover != null ? M.turnover / 12 : null);
+  $("#tPes").textContent = isAb ? "Absenteísmo por mês" : "Turnover por mês";
+  legend("#lPes", [[css("--s2"), isAb ? "Absenteísmo (%)" : "Turnover (%)"], [null, isAb ? "Meta" : "Meta mensal (anual ÷ 12)", true]]);
+  vbars($("#cPes"), { cats: D.meses, series: [{ name: isAb ? "Absenteísmo" : "Turnover", color: "var(--s2)", values: mm[k].map((x, j) => hasMonth(j) ? x : null) }], meta, fmt: x => pct(x), axisFmt: x => pct(x, x < 0.1 ? 1 : 0), hi: i });
+  $("#tPesSet").textContent = isAb ? "Absenteísmo por setor (ano)" : "Turnover por setor (ano)";
+  const list = isAb ? D.setores.absent : D.setores.turnover, smeta = isAb ? M.absent : M.turnover;
+  hbars($("#cPesSet"), { items: list.map(o => ({ n: o.nome, v: o.pct, label: isAb ? "Absenteísmo" : "Turnover",
+      extra: isAb ? tipRow(null, "Efetivo", f0(o.efetivo)) + tipRow(null, "Atestados", f0(o.atest)) + tipRow(null, "Dias", f1(o.dias))
+                  : tipRow(null, "Efetivo", f0(o.efetivo)) + tipRow(null, "Admissões", f0(o.adm)) + tipRow(null, "Desligamentos", f0(o.desl)) })),
+    meta: smeta, fmt: x => pct(x), color: o => smeta != null && o.v > smeta ? "var(--s2)" : "var(--s1)" });
+}
+
+function renderEpi() {
+  const A = D.acum, M = D.metas, mm = D.mensal, i = hiIdx();
+  const orc = M.epiOrc || null, orcMes = orc ? orc / 12 : null;
+  const meses = monthsWithData(), nM = meses.length;
+  const gasto = i == null ? A.epi : mm.epi[i];
+  const porEmp = i == null ? (A.emp ? (A.epi || 0) / A.emp : null) : (mm.emp[i] ? (mm.epi[i] || 0) / mm.emp[i] : null);
+  const pctUso = orc && A.epi != null ? A.epi / orc : null;
+  // ritmo esperado: proporcional aos meses lançados
+  const esperado = orc && nM ? orc * nM / 12 : null;
+  const sUso = pctUso == null ? "neu" : pctUso > 1 ? "crit" : (esperado && A.epi > esperado * 1.1) || pctUso > 0.9 ? "warn" : "good";
+  const sMes = i == null || !orcMes ? null : (gasto || 0) <= orcMes ? "good" : "crit";
+  const media = nM ? (A.epi || 0) / nM : null;
+  const proj = media != null ? media * 12 : null;
+  $("#epiChips").innerHTML =
+    `<div class="chip"><b>${brlK(gasto)}</b><span>Gasto ${i == null ? "no ano" : "em " + D.meses[i]} ${sMes ? pill(sMes, sMes === "good" ? "Dentro do mensal" : "Acima do mensal") : ""}</span></div>` +
+    `<div class="chip"><b>${pctUso == null ? "–" : pct(pctUso, 0)}</b><span>do orçamento anual (${brlK(orc)}) ${pill(sUso, sUso === "neu" ? "Sem orçamento" : sUso === "good" ? "No ritmo" : sUso === "warn" ? "Acima do ritmo" : "Estourado")}</span></div>` +
+    `<div class="chip"><b>${brl(porEmp, 2)}</b><span>EPI por colaborador ${i == null ? "no ano" : "no mês"}</span></div>` +
+    `<div class="chip"><b>${brlK(proj)}</b><span>Projeção para o ano · média ${brlK(media)}/mês</span></div>`;
+  const colab = st.epi === "colab";
+  $("#tEpi").textContent = colab ? "EPI por colaborador por mês" : "Compra de EPIs por mês";
+  const vals = mm.epi.map((x, j) => hasMonth(j) ? (colab ? (mm.emp[j] ? (x || 0) / mm.emp[j] : null) : (x || 0)) : null);
+  legend("#lEpi", colab ? [[css("--s5"), "R$ por colaborador"]] : [[css("--s5"), "Gasto no mês (R$)"], [null, "Orçamento mensal (anual ÷ 12)", true]]);
+  vbars($("#cEpi"), { cats: D.meses, series: [{ name: colab ? "Por colaborador" : "Gasto", color: "var(--s5)", values: vals }], meta: colab ? null : orcMes,
+    fmt: v => brl(v, colab ? 2 : 0), axisFmt: v => colab ? NF(0).format(v) : (v >= 1000 ? NF(0).format(v / 1000) + " mil" : NF(0).format(v)), hi: i });
+  let acc = 0; const cum = mm.epi.map((x, j) => hasMonth(j) ? (acc += (x || 0)) : null);
+  legend("#lEpiAc", [[css("--s5"), "Gasto acumulado (R$)"], [null, "Orçamento anual", true]]);
+  vbars($("#cEpiAc"), { cats: D.meses, series: [{ name: "Acumulado", color: "var(--s5)", values: cum }], meta: orc,
+    fmt: v => brl(v), axisFmt: v => v >= 1000 ? NF(0).format(v / 1000) + " mil" : NF(0).format(v), hi: i });
+}
+
+function renderUni() {
+  const U = D.unif;
+  if (!U) { $("#uniChips").innerHTML = `<div class="empty">Aba Uniformes não encontrada na planilha.</div>`; return; }
+  const i = hiIdx(), a = U.acum, um = U.mensal;
+  const val = k => i == null ? a[k] : um[k][i];
+  const orcTot = U.orc.tot || 0, p = i == null && orcTot > 0 ? a.tot / orcTot : null;
+  const s = p == null ? "neu" : p > 1 ? "crit" : p > 0.9 ? "warn" : "good";
+  const porEmp = i == null ? a.porEmp : (um.tot[i] != null && D.mensal.emp[i] ? um.tot[i] / D.mensal.emp[i] : null);
+  $("#uniChips").innerHTML =
+    `<div class="chip"><b>${brlK(val("tot"))}</b><span>Custo total ${i == null ? "no ano" : "no mês"}</span></div>` +
+    `<div class="chip"><b>${brl(porEmp, 2)}</b><span>Uniforme por empregado</span></div>` +
+    `<div class="chip"><b>${f0(val("pecas"))}</b><span>Peças · média ${val("pecas") ? brl(val("tot") / val("pecas"), 2) : "–"}/peça</span></div>` +
+    `<div class="chip"><b>${p == null ? "–" : pct(p, 0)}</b><span>do orçamento anual ${pill(s, s === "neu" ? (orcTot ? "Veja o ano" : "Orçamento não informado") : s === "good" ? "No orçamento" : s === "warn" ? "Perto do limite" : "Acima")}</span></div>`;
+  const S = [["Produção", "prod", "var(--s1)"], ["Manutenção", "man", "var(--s2)"], ["Externos", "ext", "var(--s3)"]];
+  legend("#lUni", S.map(x => [css(x[2].slice(4, -1)), x[0]]));
+  vbars($("#cUni"), { cats: D.meses, series: S.map(x => ({ name: x[0], color: x[2], values: um[x[1]] })), fmt: v => brl(v), axisFmt: v => v >= 1000 ? NF(0).format(v / 1000) + " mil" : NF(0).format(v), hi: i });
+  donut($("#cDonut"), S.map(x => ({ n: x[0], v: i == null ? a[x[1]] : um[x[1]][i], c: x[2] })), v => brl(v));
+}
+
+function renderAll() { renderHeader(); renderHero(); renderSeg(); renderPrev(); renderPes(); renderEpi(); renderUni(); }
+const renderTab = () => ({ seg: renderSeg, prev: renderPrev, pes: renderPes, epi: renderEpi, uni: renderUni })[st.tab]();
+
+/* ---------- interação ---------- */
+$$(".tab").forEach(b => b.addEventListener("click", () => { $$(".tab").forEach(x => x.classList.toggle("on", x === b)); st.tab = b.dataset.tab; $$(".panel").forEach(p => p.classList.toggle("on", p.id === "p-" + st.tab)); renderTab(); }));
+const segBind = (id, key) => $$(`#${id} button`).forEach(b => b.addEventListener("click", () => { $$(`#${id} button`).forEach(x => x.classList.toggle("on", x === b)); st[key] = b.dataset.v; renderTab(); }));
+segBind("segTaxa", "taxa"); segBind("segPes", "pes"); segBind("segEpi", "epi");
+$("#period").addEventListener("change", e => { st.period = e.target.value === "ano" ? "ano" : Number(e.target.value); renderHero(); renderTab(); });
+$("#btnTheme").addEventListener("click", () => { const r = document.documentElement, n = r.dataset.theme === "light" ? "dark" : "light"; r.dataset.theme = n; try { localStorage.setItem("painelSST.tema", n); } catch (e) {} renderAll(); });
+$("#btnHelp").addEventListener("click", () => $("#help").classList.toggle("on"));
+$$("[data-table]").forEach(b => b.addEventListener("click", () => {
+  const el = $("#" + b.dataset.table); if (el._showTable) { el._showTable = false; b.textContent = "Tabela"; renderTab(); return; }
+  if (el._table) { el.innerHTML = el._table(); el._showTable = true; b.textContent = "Gráfico"; }
+}));
+let rT; new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(renderTab, 150); }).observe($(".wrap"));
+
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 3500); }
+
+/* ---------- carregar planilha ---------- */
+async function loadBuffer(buf, name, quiet) {
+  try {
+    const d = await SST.fromBuffer(buf, name);
+    D = d; try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch (e) {}
+    if (st.period !== "ano" && !hasMonth(st.period)) st.period = "ano";
+    renderAll(); if (!quiet) toast("Painel atualizado com " + name);
+    if (!VIEW && window._afterLoad) window._afterLoad();
+    return true;
+  } catch (e) { console.error(e); toast("Não consegui ler a planilha: " + e.message); return false; }
+}
+if (!VIEW) {
+$("#btnOpen").addEventListener("click", () => $("#file").click());
+$("#file").addEventListener("change", async e => { const f = e.target.files[0]; if (f) await loadBuffer(await f.arrayBuffer(), f.name); e.target.value = ""; });
+let dragN = 0;
+addEventListener("dragenter", e => { e.preventDefault(); dragN++; $("#drop").classList.add("on"); });
+addEventListener("dragleave", () => { if (--dragN <= 0) { dragN = 0; $("#drop").classList.remove("on"); } });
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("drop", async e => { e.preventDefault(); dragN = 0; $("#drop").classList.remove("on"); const f = e.dataTransfer.files[0]; if (f && /\.xlsx$/i.test(f.name)) await loadBuffer(await f.arrayBuffer(), f.name); else if (f) toast("Use o arquivo .xlsx da planilha de KPIs."); });
+
+/* atualização automática: File System Access API (Chrome/Edge) */
+const IDB = { open: () => new Promise((ok, ko) => { const r = indexedDB.open("painelSST", 1); r.onupgradeneeded = () => r.result.createObjectStore("h"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }),
+  async get(k) { const db = await this.open(); return new Promise(ok => { const q = db.transaction("h").objectStore("h").get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); },
+  async set(k, v) { const db = await this.open(); return new Promise(ok => { const t = db.transaction("h", "readwrite"); t.objectStore("h").put(v, k); t.oncomplete = ok; t.onerror = ok; }); } };
+let handle = null, lastMod = 0, timer = null;
+function setLive(on, txt) { $("#live").classList.toggle("on", on); $("#liveTxt").textContent = txt; }
+async function poll(force) {
+  if (!handle) return;
+  try {
+    const f = await handle.getFile();
+    if (force || f.lastModified !== lastMod) { lastMod = f.lastModified; await loadBuffer(await f.arrayBuffer(), f.name, !force); }
+    setLive(true, "Atualização automática · verificado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+  } catch (e) { setLive(false, "Planilha em uso ou indisponível – tentando de novo"); }
+}
+async function startWatch(h) { handle = h; lastMod = 0; await poll(true); clearInterval(timer); timer = setInterval(poll, 30000); $("#btnConnect").textContent = "⟳ Trocar planilha"; }
+if (!("showOpenFilePicker" in window)) {
+  $("#btnConnect").style.display = "none";
+  setLive(false, "Use 'Abrir arquivo' para atualizar");
+} else {
+  $("#btnConnect").addEventListener("click", async () => {
+    try {
+      if (handle === null && window._saved && $("#btnConnect").dataset.mode === "re") {
+        if ((await window._saved.requestPermission({ mode: "read" })) === "granted") return startWatch(window._saved);
+      }
+      const [h] = await showOpenFilePicker({ types: [{ description: "Planilha Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }], multiple: false });
+      await IDB.set("planilha", h).catch(() => {}); startWatch(h);
+    } catch (e) { if (e.name !== "AbortError") toast("Não foi possível conectar: " + e.message); }
+  });
+  IDB.get("planilha").then(async h => {
+    if (!h) return; window._saved = h;
+    const perm = await h.queryPermission({ mode: "read" });
+    if (perm === "granted") startWatch(h);
+    else { $("#btnConnect").textContent = "⟳ Reconectar planilha"; $("#btnConnect").dataset.mode = "re"; setLive(false, "Clique em Reconectar para atualizar sozinho"); }
+  }).catch(() => {});
+}
+
+/* ---------- publicação online (GitHub Pages) ---------- */
+const GH_KEY = "painelSST.github.v1";
+let gh = {}; try { gh = JSON.parse(localStorage.getItem(GH_KEY) || "{}"); } catch (e) {}
+$("#ghUser").value = gh.user || ""; $("#ghRepo").value = gh.repo || ""; $("#ghToken").value = gh.token || ""; $("#ghAuto").checked = !!gh.auto;
+const ghSave = () => { gh = { ...gh, user: $("#ghUser").value.trim(), repo: $("#ghRepo").value.trim(), token: $("#ghToken").value.trim(), auto: $("#ghAuto").checked }; try { localStorage.setItem(GH_KEY, JSON.stringify(gh)); } catch (e) {} };
+["#ghUser", "#ghRepo", "#ghToken", "#ghAuto"].forEach(q => $(q).addEventListener("change", ghSave));
+$("#btnCloud").addEventListener("click", () => $("#cloud").classList.toggle("on"));
+const ghOk = () => gh.user && gh.repo && gh.token;
+const siteUrl = () => `https://${gh.user.toLowerCase()}.github.io/${gh.repo}/`;
+const ghStat = (html, err) => { $("#ghStat").innerHTML = html; $("#ghStat").style.color = err ? "var(--crit)" : ""; };
+const b64 = str => { const u8 = new TextEncoder().encode(str); let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+async function ghReq(path, opts = {}) {
+  return fetch(`https://api.github.com/repos/${encodeURIComponent(gh.user)}/${encodeURIComponent(gh.repo)}/${path}`, { cache: "no-store", ...opts,
+    headers: { Authorization: "Bearer " + gh.token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+}
+const ghErr = async r => { let m = ""; try { m = (await r.json()).message || ""; } catch (e) {}
+  if (r.status === 401) return "Chave de acesso inválida ou vencida.";
+  if (r.status === 403) return "A chave não tem permissão de escrita (Contents: Read and write) neste repositório.";
+  if (r.status === 404) return "Repositório não encontrado. Confira usuário, nome do repositório e se a chave tem acesso a ele.";
+  return `Erro ${r.status}: ${m}`; };
+async function putFile(path, text, msg) {
+  let sha;
+  const g = await ghReq("contents/" + path);
+  if (g.ok) sha = (await g.json()).sha; else if (g.status !== 404) throw new Error(await ghErr(g));
+  const r = await ghReq("contents/" + path, { method: "PUT", body: JSON.stringify({ message: msg, content: b64(text), ...(sha ? { sha } : {}) }) });
+  if (!r.ok) throw new Error(await ghErr(r));
+}
+const cleanData = () => ({ ...D, meta: { ...D.meta, fonte: "" } });
+const dataSig = d => JSON.stringify({ ...d, meta: { ...d.meta, lidoEm: "" } });
+function buildHtml(mode) {
+  const seed = JSON.stringify(cleanData()).replace(/</g, "\\u003c");
+  return PRISTINE.replace(/(<script id="seed" type="application\/json">)[\s\S]*?(<\/script>)/, (m, a, b) => a + seed + b).replace('const MODE = "admin";', `const MODE = "${mode}";`);
+}
+let publishing = false;
+async function publishData(auto) {
+  ghSave(); if (!ghOk()) { ghStat("Preencha usuário, repositório e chave de acesso.", true); return; }
+  if (publishing) return; publishing = true;
+  try {
+    ghStat("Publicando…");
+    await putFile("dados.json", JSON.stringify(cleanData()), "Atualiza indicadores " + new Date().toLocaleString("pt-BR"));
+    gh.lastSig = dataSig(D); ghSave();
+    const hr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    ghStat(`✓ Dados publicados às ${hr}${auto ? " (automático)" : ""}. A diretoria vê a atualização em 1 a 2 minutos: <a href="${siteUrl()}" target="_blank" rel="noopener">${siteUrl()}</a>`);
+    if (auto) toast("Painel online atualizado");
+  } catch (e) { ghStat("✕ " + e.message, true); if (auto) toast("Falha ao publicar online: " + e.message); }
+  publishing = false;
+}
+$("#ghPub").addEventListener("click", () => publishData(false));
+$("#ghSite").addEventListener("click", async () => {
+  ghSave(); if (!ghOk()) { ghStat("Preencha usuário, repositório e chave de acesso.", true); return; }
+  try {
+    ghStat("Criando o site…");
+    await putFile("index.html", buildHtml("online"), "Painel SST – site");
+    await putFile("dados.json", JSON.stringify(cleanData()), "Painel SST – dados iniciais");
+    gh.lastSig = dataSig(D); ghSave();
+    const p = await ghReq("pages", { method: "POST", body: JSON.stringify({ source: { branch: "main", path: "/" } }) });
+    const pagesOk = p.ok || p.status === 409;
+    ghStat(pagesOk ? `✓ Site criado. Em 1 a 2 minutos ele estará no ar em <a href="${siteUrl()}" target="_blank" rel="noopener">${siteUrl()}</a> – é esse o link para enviar à diretoria.`
+                   : `✓ Arquivos enviados. Falta ligar o site: no GitHub, abra o repositório › Settings › Pages › Branch: <b>main</b> › Save. Depois o link será <a href="${siteUrl()}" target="_blank" rel="noopener">${siteUrl()}</a>`);
+  } catch (e) { ghStat("✕ " + e.message, true); }
+});
+window._afterLoad = () => { if (gh.auto && ghOk() && dataSig(D) !== gh.lastSig) publishData(true); };
+if (ghOk()) ghStat(`Configurado. Link da diretoria: <a href="${siteUrl()}" target="_blank" rel="noopener">${siteUrl()}</a>${gh.auto ? " · publicação automática ligada" : ""}`);
+
+/* gera a versão só de leitura para a diretoria */
+$("#btnExport").addEventListener("click", () => {
+  const seed = JSON.stringify({ ...D, meta: { ...D.meta, fonte: "" } }).replace(/</g, "\\u003c");
+  let html = PRISTINE.replace(/(<script id="seed" type="application\/json">)[\s\S]*?(<\/script>)/, (m, a, b) => a + seed + b);
+  html = html.replace('const MODE = "admin";', 'const MODE = "viewer";');
+  const dt = new Date(D.meta.lidoEm || Date.now()), ymd = dt.toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  a.download = `Painel_SST_Diretoria_${ymd}.html`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("Versão da diretoria gerada: " + a.download);
+});
+} else {
+  ["#btnConnect", "#btnOpen", "#btnExport", "#btnCloud", "#cloud", "#btnHelp", "#file", "#help", "#drop"].forEach(q => $(q) && $(q).remove());
+  const lido = new Date(D.meta.lidoEm);
+  $("#live").classList.add("on");
+  $("#liveTxt").textContent = "Dados de " + lido.toLocaleDateString("pt-BR");
+  if (ONLINE) {
+    const refresh = async () => {
+      try {
+        const r = await fetch("dados.json?t=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d && d.meta && d.meta.lidoEm !== D.meta.lidoEm) { D = d; if (st.period !== "ano" && !hasMonth(st.period)) st.period = "ano"; renderAll(); }
+        const l = new Date(D.meta.lidoEm);
+        $("#liveTxt").textContent = "Atualizado em " + l.toLocaleDateString("pt-BR") + " às " + l.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      } catch (e) {}
+    };
+    refresh(); setInterval(refresh, 5 * 60 * 1000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  }
+}
+
+renderAll();
+})();
+</script></body></html>
